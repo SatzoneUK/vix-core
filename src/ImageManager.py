@@ -73,7 +73,7 @@ config.imagemanager.scheduletime = ConfigClock(default=0)  # 1:00
 config.imagemanager.query = ConfigYesNo(default=True)
 config.imagemanager.lastbackup = ConfigNumber(default=0)
 config.imagemanager.number_to_keep = ConfigNumber(default=0)
-config.imagemanager.imagefeed_ViX = ConfigText(default="https://openvix.amikohome.co.uk/openbhfirmware/json.php?box=", fixed_size=False)
+config.imagemanager.imagefeed_ViX = ConfigText(default="https://openvix.amikohome.co.uk/openvixfirmware/json.php?box=", fixed_size=False)
 config.imagemanager.imagefeed_ViX.value = config.imagemanager.imagefeed_ViX.default # this is no longer a user setup option
 config.imagemanager.imagefeed_ATV = ConfigText(default="https://images.mynonpublic.com/openatv/json", fixed_size=False)
 config.imagemanager.imagefeed_ATV.value = config.imagemanager.imagefeed_ATV.default # this is no longer a user setup option
