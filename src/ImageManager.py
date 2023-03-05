@@ -40,8 +40,9 @@ def getMountChoices():
 	for p in harddiskmanager.getMountedPartitions():
 		if path.exists(p.mountpoint):
 			d = path.normpath(p.mountpoint)
-			if p.mountpoint != "/":
-				choices.append((p.mountpoint, d))
+			entry = (p.mountpoint, d)
+			if p.mountpoint != "/" and entry not in choices:
+				choices.append(entry)
 	choices.sort()
 	return choices
 
@@ -53,6 +54,7 @@ def getMountDefault(choices):
 
 
 def __onPartitionChange(*args, **kwargs):
+	global choices
 	choices = getMountChoices()
 	config.imagemanager.backuplocation.setChoices(choices=choices, default=getMountDefault(choices))
 
@@ -62,6 +64,7 @@ config.imagemanager = ConfigSubsection()
 config.imagemanager.autosettingsbackup = ConfigYesNo(default=True)
 choices = getMountChoices()
 config.imagemanager.backuplocation = ConfigSelection(choices=choices, default=getMountDefault(choices))
+config.imagemanager.extensive_location_search = ConfigYesNo(default=True)
 harddiskmanager.on_partition_list_change.append(__onPartitionChange) # to update backuplocation choices on mountpoint change
 config.imagemanager.backupretry = ConfigNumber(default=30)
 config.imagemanager.backupretrycount = NoSave(ConfigNumber(default=0))
@@ -181,7 +184,7 @@ class VIXImageManager(Screen):
 		if SystemInfo["canMultiBoot"]:
 			self.mtdboot = SystemInfo["MBbootdevice"]
 		self.onChangedEntry = []
-		if getMountChoices():
+		if choices:
 			self["list"] = MenuList(list=[((_("No images found on the selected download server...if password check validity")), "Waiter")])		
 
 		else:
@@ -411,7 +414,11 @@ class VIXImageManager(Screen):
 
 		model = getMachineMake()
 		imagesFound = []
-		for media in ['/media/%s' % x for x in listdir('/media')] + (['/media/net/%s' % x for x in listdir('/media/net')] if path.isdir('/media/net') else [])  + (['/media/autofs/%s' % x for x in listdir('/media/autofs')] if path.isdir('/media/autofs') else []):
+		if config.imagemanager.extensive_location_search.value:
+			mediaList = ['/media/%s' % x for x in listdir('/media')] + (['/media/net/%s' % x for x in listdir('/media/net')] if path.isdir('/media/net') else [])  + (['/media/autofs/%s' % x for x in listdir('/media/autofs')] if path.isdir('/media/autofs') else [])
+		else:
+			mediaList = [config.imagemanager.backuplocation.value]
+		for media in mediaList:
 			try: # /media/autofs/xxx will crash listdir if "xxx" is inactive (e.g. dropped network link). os.access reports True for "xxx" so it seems we are forced to try/except here.
 				medialist = listdir(media)
 			except FileNotFoundError:
